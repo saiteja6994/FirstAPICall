@@ -1,12 +1,14 @@
 package com.example.myfirstspringproject.Services;
 
 import com.example.myfirstspringproject.DTO.FakeStoreDTO;
+import com.example.myfirstspringproject.Exceptions.ProductNotFoundException;
 import com.example.myfirstspringproject.models.Category;
 import com.example.myfirstspringproject.models.Product;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpMessageConverterExtractor;
 import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -36,17 +38,21 @@ public class FakseStoreProductService implements ProductService{
     }
 
     @Override
-    public Product getProductById(Long id) {
+    public Product getProductById(Long id) throws ProductNotFoundException {
+//        int x=1/0;
         FakeStoreDTO fakeStoreDTO=restTemplate.getForObject("https://fakestoreapi.com/products/"+id, FakeStoreDTO.class);
         //convert dto into product object
 
 //        assert fakeStoreDTO != null;
-        if(fakeStoreDTO==null) return null;
+        if(fakeStoreDTO==null) {
+            throw new ProductNotFoundException(id,"Entered "+id+" is out of bound");
+        }
         return convertFakeStoreDtoToProduct(fakeStoreDTO);
     }
 
     @Override
     public List<Product> getAllProducts() {
+
         FakeStoreDTO[] fakeStoreDTOSList=restTemplate.getForObject("https://fakestoreapi.com/products", FakeStoreDTO[].class);
         //convert List of faksestoredto to list of products
         List<Product> response=new ArrayList<>();
@@ -68,4 +74,11 @@ public class FakseStoreProductService implements ProductService{
         FakeStoreDTO response = restTemplate.execute("https://fakestoreapi.com/products/"+id, HttpMethod.PUT, requestCallback, responseExtractor);
         return convertFakeStoreDtoToProduct(response);
     }
+
+    @Override
+    public void deleteProductById(Long id) {
+        restTemplate.execute("https://fakestoreapi.com/products/"+id, HttpMethod.DELETE, (RequestCallback)null, (ResponseExtractor)null);
+    }
+
+
 }
